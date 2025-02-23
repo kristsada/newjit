@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายชื่อผู้ให้คำปรึกษา</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        header {
+            background: linear-gradient(135deg, #d0e1ff, #f8d7e3, #ffffff);
+            padding: 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            height: 120px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        select {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #605399;
+            color: white;
+            font-size: 16px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .no-results {
+            color: #999;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        th:nth-child(4), td:nth-child(4) {  
+            width: 250px;
+        }
+
+        th:nth-child(1), td:nth-child(1) {  
+            width: 120px;
+        }
+
+        th:nth-child(2), td:nth-child(2) {  
+            width: 150px;
+        }
+
+        th:nth-child(3), td:nth-child(3) {  
+            width: 150px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            background-color: #605399;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .next-page-button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #605399, #907ad6);
+            color: white;
+            font-size: 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .next-page-button:hover {
+            background: linear-gradient(135deg, #50408d, #7b6fc5);
+            transform: translateY(-2px);
+        }
+
+        .next-page-button:focus {
+            outline: 3px solid #907ad6;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="images/sarn.png" alt="โลโก้ศาลอาญากรุงเทพใต้" class="logo">
+        <h1>บัญชีคดียุติ/สิ้นสุดคลินิกจิตสังคม</h1>
+        <input type="text" id="searchBox" placeholder="ค้นหาข้อมูลทั้งหมด...">
+        <select id="offenseSelect">
+            <option value="">เลือกฐานความผิด</option>
+        </select>
+    </header>
+
+    <main>
+        <a href="search.html" class="next-page-button">ไปหน้าบัญชีคดีคลินิกจิตสังคม </a>
+
+        <div class="table-container">
+            <div id="results"></div>
+        </div>
+    </main>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxJMuAVYNnVzROO8tffHgv5M0otyZk4GPTvm6oJqpnN_iciNcLJexQT1kHwGodoVo7V/exec";  // Replace this with your actual Apps Script URL
+        let allData = [];
+        window.onload = function() {
+            fetch(scriptURL)
+                .then(response => response.json())  
+                .then(data => {
+                    console.log('Data fetched:', data);
+                    allData = data;
+                    renderTable(allData);  
+                    populateOffenseSelect(allData);  
+                });
+        };
+
+        function renderTable(data) {
+            let resultsDiv = document.getElementById('results');
+            if (data.length === 0) {
+                resultsDiv.innerHTML = '<p class="no-results">ไม่พบข้อมูล</p>';
+                return;
+            }
+
+            let table = ` 
+                <table>
+                    <tr>
+                        <th>วันที่ยุติ/สิ้นสุด</th>
+                        <th>เลขคดีศจ.ล.</th>
+                        <th>เลขคดีหลักแดง</th>
+                        <th>เลขคดีหลักดำ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ฐานความผิด</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+            `;
+
+            data.forEach((row, index) => {
+                let endDate = row.end_date ? new Date(row.end_date) : null;
+                if (endDate) {
+                    const day = endDate.getDate();
+                    const month = endDate.getMonth() + 1;
+                    const year = endDate.getFullYear();
+                    endDate = `${day < 10 ? '0' + day : day}/${month < 10 ? '0' + month : month}/${year}`;
+                } else {
+                    endDate = '';
+                }
+
+                table += ` 
+                    <tr>
+                        <td>${endDate || ''}</td>
+                        <td>${String(row.case_id) || ''}</td>
+                        <td>${String(row.red_case) || ''}</td>
+                        <td>${String(row.black_case) || ''}</td>
+                        <td>${String(row.name) || ''}</td>
+                        <td>${String(row.offense) || ''}</td>
+                        <td>${String(row.note) || ''}</td>
+                    </tr>
+                `;
+            });
+
+            table += '</table>';
+            resultsDiv.innerHTML = table;
+        }
+
+        function filterData() {
+            let query = document.getElementById('searchBox').value.toLowerCase();
+            let selectedOffense = document.getElementById('offenseSelect').value.toLowerCase();
+
+            let filteredData = allData.filter(row => {
+                let matchQuery = Object.values(row).some(value => 
+                    String(value).toLowerCase().includes(query)
+                );
+                let matchOffense = selectedOffense === '' || String(row.offense).toLowerCase() === selectedOffense;
+                
+                return matchQuery && matchOffense;
+            });
+
+            renderTable(filteredData);
+        }
+
+        document.getElementById('searchBox').addEventListener('input', filterData);
+        document.getElementById('offenseSelect').addEventListener('change', filterData);
+
+        function populateOffenseSelect(data) {
+            let offenseSet = new Set();
+            data.forEach(row => offenseSet.add(row.offense));
+            let offenseSelect = document.getElementById('offenseSelect');
+            offenseSet.forEach(offense => {
+                let option = document.createElement('option');
+                option.value = offense;
+                option.textContent = offense;
+                offenseSelect.appendChild(option);
+            });
+        }
+    </script>
+</body>
+</html>

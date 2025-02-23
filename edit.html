@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่ม แก้ไข หรือ ลบข้อมูล</title>
+    <link href="https://fonts.googleapis.com/css2?family=Itim&family=Mali:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <img src="images/sarn.png" alt="โลโก้ศาลอาญากรุงเทพใต้" class="logo">
+        <h1>เพิ่ม แก้ไข หรือ ลบข้อมูลผู้ให้คำปรึกษา</h1>
+        <a href="index.html" class="home-link">กลับไปหน้าหลัก</a>
+    </header>
+
+    <main>
+        <!-- ฟอร์มเพิ่มหรือแก้ไขข้อมูล -->
+        <div id="editForm">
+            <h3>เพิ่มหรือแก้ไขข้อมูลผู้ให้คำปรึกษา</h3>
+            <form id="addEditForm">
+                <label for="name">ชื่อ:</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="expertise">สาขา:</label>
+                <input type="text" id="expertise" name="expertise" required>
+
+                <label for="contact">ติดต่อ:</label>
+                <input type="text" id="contact" name="contact" required>
+
+                <button type="submit">บันทึกข้อมูล</button>
+            </form>
+        </div>
+
+        <!-- ส่วนแสดงข้อมูล -->
+        <div id="results"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 ศูนย์ให้คำปรึกษาทางจิตสังคม</p>
+        <a href="index.html" class="home-link">กลับไปหน้าหลัก</a>
+    </footer>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbym5JDVH_D27sfWeRt4w2R9F0o1YhnXkNgaVKiQfNM4hmk2nyivNOsa8_V86QvLemcb/exec"; // เปลี่ยนเป็น URL Google Apps Script ของคุณ
+
+        // ฟังก์ชันแสดงข้อมูล
+        function showData() {
+            fetch(scriptURL)
+                .then(response => response.json())
+                .then(data => {
+                    let resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '<h3>ข้อมูลที่มีอยู่:</h3>';
+                    
+                    if (data.length > 0) {
+                        let table = '<table><tr><th>ชื่อ</th><th>สาขา</th><th>ติดต่อ</th><th>จัดการ</th></tr>';
+                        data.forEach((row, index) => {
+                            table += `<tr>
+                                <td>${row.name}</td>
+                                <td>${row.expertise}</td>
+                                <td>${row.contact}</td>
+                                <td>
+                                    <button onclick="editData(${row.id})">แก้ไข</button>
+                                    <button onclick="deleteData(${row.id})">ลบ</button>
+                                </td>
+                            </tr>`;
+                        });
+                        table += '</table>';
+                        resultsDiv.innerHTML += table;
+                    } else {
+                        resultsDiv.innerHTML += '<p>ไม่มีข้อมูลในขณะนี้</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('เกิดข้อผิดพลาด:', error);
+                    alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                });
+        }
+
+        // ฟังก์ชันแสดงฟอร์มเพิ่มหรือแก้ไขข้อมูล
+        function editData(id) {
+            fetch(`${scriptURL}?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('name').value = data.name;
+                    document.getElementById('expertise').value = data.expertise;
+                    document.getElementById('contact').value = data.contact;
+                    document.getElementById('addEditForm').dataset.id = data.id;  // เก็บ id ไว้เพื่อแก้ไข
+                });
+        }
+
+        // ฟังก์ชันลบข้อมูล
+        function deleteData(id) {
+            fetch(`${scriptURL}?delete=${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(() => {
+                    alert('ลบข้อมูลเรียบร้อยแล้ว');
+                    showData();  // รีเฟรชข้อมูล
+                })
+                .catch(error => {
+                    console.error('เกิดข้อผิดพลาดในการลบ:', error);
+                    alert('ไม่สามารถลบข้อมูลได้');
+                });
+        }
+
+        // ฟังก์ชันเพิ่มหรือแก้ไขข้อมูล
+        document.getElementById('addEditForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const expertise = document.getElementById('expertise').value;
+            const contact = document.getElementById('contact').value;
+            const id = this.dataset.id;  // ใช้ id ในการแก้ไขข้อมูล
+
+            const data = { name, expertise, contact };
+
+            // ถ้ามี id ให้ทำการแก้ไข, ถ้าไม่มีให้เพิ่มข้อมูลใหม่
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${scriptURL}?id=${id}` : scriptURL;
+
+            fetch(url, {
+                method: method,
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(() => {
+                alert(id ? 'ข้อมูลถูกแก้ไขแล้ว' : 'ข้อมูลถูกเพิ่มแล้ว');
+                showData();  // รีเฟรชข้อมูล
+                document.getElementById('addEditForm').reset();  // รีเซ็ตฟอร์ม
+                delete this.dataset.id;  // ลบข้อมูล id
+            })
+            .catch(error => {
+                console.error('เกิดข้อผิดพลาดในการบันทึก:', error);
+                alert('ไม่สามารถบันทึกข้อมูลได้');
+            });
+        });
+
+        // เรียกฟังก์ชันแสดงข้อมูลเมื่อโหลดหน้า
+        showData();
+    </script>
+</body>
+</html>
